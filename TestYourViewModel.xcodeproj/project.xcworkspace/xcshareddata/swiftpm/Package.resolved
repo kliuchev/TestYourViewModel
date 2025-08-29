@@ -1,0 +1,15 @@
+{
+  "originHash" : "513c14995587de2188be2af9d13d1b31e0b9f1c3b8ff4ef05e4bf6800ef65d79",
+  "pins" : [
+    {
+      "identity" : "publisherrecorder",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/kliuchev/PublisherRecorder",
+      "state" : {
+        "revision" : "5c74be2f610e31a0db6564dea9f77753a345be78",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 3
+}
