@@ -14,9 +14,9 @@ struct MyView<VM: MyViewModel>: View {
     
     var body: some View {
         Button {
-            Task { await viewModel.onGetRandomVideoButtonTapped() }
+            Task { await viewModel.onButtonTapped() }
         } label: {
-            if viewModel.isLoading {
+            if viewModel.state.isLoading {
                 ProgressView()
                     .transition(.opacity)
             } else {
@@ -25,14 +25,14 @@ struct MyView<VM: MyViewModel>: View {
                     .fontWeight(.bold)
             }
         }
-        .disabled(viewModel.isLoading)
+        .disabled(viewModel.state.isLoading)
         .padding()
         .buttonStyle(.bordered)
-        .onChange(of: viewModel.url) {
-            guard let url = viewModel.url else { return }
-            openURL.callAsFunction(url)
+        .onChange(of: viewModel.state.url) {
+            guard let url = viewModel.state.url else { return }
+            openURL(url)
         }
-        .alert(isPresented: $viewModel.isAlertShown, error: MyUsefulLinksAPIClientError.notFound) {}
+        .alert(isPresented: $viewModel.state.isAlertShown, error: MyUsefulLinksAPIClientError.notFound) {}
     }
 }
 

@@ -31,80 +31,51 @@ If we test **only the final state**, we might miss bugs like:
 
 ---
 
-## ViewModels
+## Tests
 
-### ✅ MyViewModel (good implementation)
+### ✅ Good tests (cover state changes)
 
 ```swift
-final class MyViewModelImpl: MyViewModel {
+@Test func expectedToOpenURLAndShowLoadingState_whenAPIClientReturnsURL() async throws  {
+    let expectedURL = URL(string: "https://google.com")!
+    let apiClient = MockAPIClient { expectedURL }
+    
+    let sut = makeSUT(apiClient: apiClient)
+    let state = sut.$state.record()
 
-    // MARK: - Dependencies
+    await sut.onButtonTapped()
     
-    private let apiClient: MyUsefulLinksAPIClient
+    let expectedStates = [
+        MyViewState.init(isLoading: false),
+        MyViewState.init(isLoading: true),
+        MyViewState.init(isLoading: true, url: expectedURL),
+        MyViewState.init(isLoading: false, url: expectedURL)
+    ]
     
-    // MARK: - State
-    
-    @Published var isLoading: Bool = false
-    @Published var isAlertShown: Bool = false
-    @Published var url: URL?
-    
-    // MARK: - Initializer
-    
-    init(apiClient: MyUsefulLinksAPIClient) {
-        self.apiClient = apiClient
-    }
-    
-    // MARK: - Events
-    
-    func onGetRandomVideoButtonTapped() async {
-        isLoading = true
-        defer { isLoading = false }
-        
-        do {
-            url = try await apiClient.getRandomUsefulLink()
-        } catch {
-            isAlertShown = true
-        }
-    }
+    #expect(state.output == expectedStates)
 }
 ```
 
-### ❌ MyBadViewModel (bad implementation)
+### ❌ Bad test (ignore state changes)
 
 ```swift
-import Foundation
-import Combine
+@Test func badExpectation() async {
+    let expectedURL = URL(string: "https://google.com")!
+    let apiClient = MockAPIClient { expectedURL }
+    
+    let sut = makeSUT(apiClient: apiClient)
 
-final class MyBadViewModelImpl: MyViewModel {
-    // MARK: - Dependencies
+    await sut.onButtonTapped()
     
-    private let apiClient: MyUsefulLinksAPIClient
+    #expect(apiClient.getRandomUsefulLinkIsCalled)
     
-    // MARK: - State
-    
-    @Published var isLoading: Bool = false
-    @Published var isAlertShown: Bool = false
-    @Published var url: URL?
-    
-    // MARK: - Initializer
-    
-    init(apiClient: MyUsefulLinksAPIClient) {
-        self.apiClient = apiClient
-    }
-    
-    // MARK: - Events
-    
-    func onGetRandomVideoButtonTapped() async {
-        isLoading = false // oops there is a mistake!
-        defer { isLoading = false }
-        
-        do {
-            url = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-            url = try await apiClient.getRandomUsefulLink()
-        } catch {
-            isAlertShown = true
-        }
-    }
+    // It may look like everything is fine and works as expected.
+    // But in fact, we don’t know how many times the VM changes `isLoading`,
+    // how often it updates the URL, etc.
+    // This is a problem because if the VM first sets an incorrect URL
+    // and then updates it to the correct one, our view may try to open the URL twice
+    // or even fail to open the expected URL, even if the expectation itself is correct.
+    #expect(sut.state.url == expectedURL)
 }
 ```
 

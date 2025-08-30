@@ -9,33 +9,36 @@ import Foundation
 import Combine
 
 final class MyBadViewModelImpl: MyViewModel {
+    
     // MARK: - Dependencies
     
     private let apiClient: MyUsefulLinksAPIClient
     
     // MARK: - State
     
-    @Published var isLoading: Bool = false
-    @Published var isAlertShown: Bool = false
-    @Published var url: URL?
+    @Published var state: MyViewState
     
     // MARK: - Initializer
     
     init(apiClient: MyUsefulLinksAPIClient) {
         self.apiClient = apiClient
+        self.state = .init()
     }
     
     // MARK: - Events
     
-    func onGetRandomVideoButtonTapped() async {
-        isLoading = false // oops there is a mistake!
-        defer { isLoading = false }
+    func onButtonTapped() async {
+        state.isLoading = false // oops there is a mistake!
+        defer { state.isLoading = false }
         
         do {
-            url = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-            url = try await apiClient.getRandomUsefulLink()
+            // here is another one
+            state.url = URL(string: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+            state.url = try await apiClient.getRandomUsefulLink()
         } catch {
-            isAlertShown = true
+            state.isAlertShown = true
         }
     }
 }
+
+

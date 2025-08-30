@@ -23,24 +23,22 @@ struct MyBadViewModelTests {
         
         let sut = makeSUT(apiClient: apiClient)
         
-        let isLoading = sut.$isLoading.record()
-        let isAlertShown = sut.$isAlertShown.record()
-        let url = sut.$url.record()
-    
+        let state = sut.$state.record()
+        
         // trigger
-        await sut.onGetRandomVideoButtonTapped()
+        await sut.onButtonTapped()
         
         #expect(apiClient.getRandomUsefulLinkIsCalled)
         
-        // here we know what was the initial state `false`
-        // how it changes when the event was triggered `[true, false]`
-        #expect(isLoading.output == [false, true, false])
         
-        // here we check what was initial state and how it changes
-        #expect(isAlertShown.output == [false, true])
+        let expectedStates = [
+            MyViewState.init(isLoading: false),
+            MyViewState.init(isLoading: true),
+            MyViewState.init(isLoading: true, isAlertShown: true),
+            MyViewState.init(isLoading: false, isAlertShown: true)
+        ]
         
-        // here we know exactly that VM doesn't set URL when something when wrong
-        #expect(url.output == [nil])
+        #expect(state.output == expectedStates)
     }
     
     @Test func expectedToOpenURLAndShowLoadingState_whenAPIClientReturnsURL() async throws  {
@@ -49,16 +47,18 @@ struct MyBadViewModelTests {
         
         let sut = makeSUT(apiClient: apiClient)
         
-        let isLoading = sut.$isLoading.record()
-        let url = sut.$url.record()
-        let isAlertShown = sut.$isAlertShown.record()
+        let state = sut.$state.record()
 
-        await sut.onGetRandomVideoButtonTapped()
+        await sut.onButtonTapped()
         
-        #expect(apiClient.getRandomUsefulLinkIsCalled)
-        #expect(isLoading.output == [false, true, false])
-        #expect(url.output == [nil, expectedURL])
-        #expect(isAlertShown.output == [false])
+        let expectedStates = [
+            MyViewState.init(isLoading: false),
+            MyViewState.init(isLoading: true),
+            MyViewState.init(isLoading: true, url: expectedURL),
+            MyViewState.init(isLoading: false, url: expectedURL)
+        ]
+        
+        #expect(state.output == expectedStates)
     }
     
     // MARK: - Bad testes that don't cover state changes
@@ -69,7 +69,7 @@ struct MyBadViewModelTests {
         
         let sut = makeSUT(apiClient: apiClient)
 
-        await sut.onGetRandomVideoButtonTapped()
+        await sut.onButtonTapped()
         
         #expect(apiClient.getRandomUsefulLinkIsCalled)
         
@@ -79,7 +79,7 @@ struct MyBadViewModelTests {
         // This is a problem because if the VM first sets an incorrect URL
         // and then updates it to the correct one, our view may try to open the URL twice
         // or even fail to open the expected URL, even if the expectation itself is correct.
-        #expect(sut.url == expectedURL)
+        #expect(sut.state.url == expectedURL)
     }
 }
 

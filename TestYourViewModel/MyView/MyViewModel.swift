@@ -13,45 +13,41 @@ protocol MyViewModel: ObservableObject {
     
     // MARK: - State
     
-    var isLoading: Bool { get }
-    var isAlertShown: Bool { get set }
-    var url: URL? { get }
+    var state: MyViewState { get set }
     
     
     // MARK: - Events
     
-    func onGetRandomVideoButtonTapped() async
+    func onButtonTapped() async
 }
 
 
 final class MyViewModelImpl: MyViewModel {
-
     // MARK: - Dependencies
     
     private let apiClient: MyUsefulLinksAPIClient
     
     // MARK: - State
     
-    @Published var isLoading: Bool = false
-    @Published var isAlertShown: Bool = false
-    @Published var url: URL?
+    @Published var state: MyViewState
     
     // MARK: - Initializer
     
     init(apiClient: MyUsefulLinksAPIClient) {
         self.apiClient = apiClient
+        self.state = .init()
     }
     
     // MARK: - Events
     
-    func onGetRandomVideoButtonTapped() async {
-        isLoading = true
-        defer { isLoading = false }
+    func onButtonTapped() async {
+        state.isLoading = true
+        defer { state.isLoading = false }
         
         do {
-            url = try await apiClient.getRandomUsefulLink()
+            state.url = try await apiClient.getRandomUsefulLink()
         } catch {
-            isAlertShown = true
+            state.isAlertShown = true
         }
     }
 }
